@@ -3,7 +3,7 @@ from keras.models import *
 from keras.layers import *
 from keras.applications import *
 from keras.preprocessing.image import *
-
+from keras.applications.inception_v3 import InceptionV3, preprocess_input
 import h5py
 
 def save_model(MODEL,image_size,lambda_func=None):
@@ -19,17 +19,18 @@ def save_model(MODEL,image_size,lambda_func=None):
     model=Model(base_model.input, GlobalAveragePooling2D()(base_model.output))
 
     gen=ImageDataGenerator()
-    train_generator=gen.flow_from_directory("train2",image_size, shuffle=False, batch_size=16)
-    test_generator = gen.flow_from_directory("test2", image_size, shuffle=False, batch_size=16,class_mode=None)
+    train_generator = gen.flow_from_directory("train2", image_size, shuffle=False, batch_size=16)
+    test_generator = gen.flow_from_directory("test2", image_size, shuffle=False, batch_size=16, class_mode=None)
 
     train=model.predict(train_generator,train_generator.samples)
     test=model.predict(test_generator,test_generator.samples)
 
-    with h5py.File("pre_%s.h5" % MODEL.func_name) as h:
+    with h5py.File("pre_%s.h5" % MODEL.__name__) as h:
         h.create_dataset("train", data=train)
         h.create_dataset("test", data=test)
         h.create_dataset("label", data=train_generator.classes)
 
 
-save_model(ResNet50, (224, 224))
-#save_model(Xception, (299, 299), xception.preprocess_input)
+#save_model(ResNet50, (224, 224))
+save_model(InceptionV3, (299, 299), preprocess_input)
+save_model(VGG19, (299, 299), preprocess_input)
